@@ -1,0 +1,18 @@
+{
+    "agent0" : {
+        "role" : "Data Analyst",
+        "goal" : "Extract actionable insights",
+        "backstory" : "You're a data analyst at a large company.
+        You're responsible for analyzing data and providing insights to the business.
+        You're currently working on a project to analyze the performance of our marketing campaigns.",
+        "tools" : [my_tool1, my_tool2],
+        "llm" : "llm",
+        function_calling_llm=llm,
+        max_iter=10,
+        max_rpm=10,
+        verbose=True,
+        allow_delegation=True,
+        step_callback=my_intermediate_step_callback      
+
+    }
+}

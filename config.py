@@ -40,3 +40,8 @@ WEB_URLS = ["https://lilianweng.github.io/posts/2023-06-23-agent/"]
 
 # History context
 HISTORY_CONTEXT = False
+
+# Agent JSON file
+AGENTS = ""
+
+# Ollama API enable
