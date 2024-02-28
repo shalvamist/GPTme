@@ -1,9 +1,8 @@
-
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from llm.load_model import download_model, mount_model
-from ingest.doc_loader import get_retriever, get_docs
-from prompt_config import PROMPT
+from GPTme.llms.load_model import download_model, mount_model
+from GPTme.ingest.doc_loader import get_retriever, get_docs
+from GPTme.prompt_config import PROMPT
 from langchain_core.runnables import RunnableParallel
 
 llm_path = download_model()
@@ -28,7 +27,7 @@ def get_ragchain():
 
     return rag_chain_with_source
 
-result = get_ragchain().invoke("Please introduce your self")
+result = get_ragchain().invoke("tell me about RISCV")
 print(result)
 
 

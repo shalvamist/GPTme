@@ -1,5 +1,5 @@
 from huggingface_hub import hf_hub_download
-from config import MODEL_ID, MODEL_BASE_NAME, MODELS_PATH, CONTEXT_WINDOW_SIZE, MAX_NEW_TOKENS,N_BATCH,N_GPU_LAYERS
+from GPTme.config import MODEL_ID, MODEL_BASE_NAME, MODELS_PATH, CONTEXT_WINDOW_SIZE, MAX_NEW_TOKENS,N_BATCH,N_GPU_LAYERS
 from langchain_community.llms import LlamaCpp
 
 # Download the model from HuggingFace

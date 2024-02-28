@@ -2,10 +2,10 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from chromadb.config import Settings
-from config import WEB_URLS, EMBEDDING_MODEL, DB_PATH, CHUNK_SIZE, OVERLAP
+from GPTme.config import WEB_URLS, EMBEDDING_MODEL, DB_PATH, CHUNK_SIZE, OVERLAP
 
-from load_webpage import load_webpage
-from load_sourcedocs import load_sources
+from GPTme.ingest.load_webpage import load_webpage
+from GPTme.ingest.load_sourcedocs import load_sources
 
 # Setting the embedding DB
 CHROMA_SETTINGS = Settings(

@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = {}  # Scan the project directory with the default parameters
+
+[project]
+name = "GPTme"
+version = "0.0.1"
+authors = [
+  { name="Shalva Mist", email="shalvamm@gmail.com" },
+]

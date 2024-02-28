@@ -1,3 +1,7 @@
+#: The release version
+version = '0.1'
+__version__ = version
+
 # Models used in the application - you need to define two of them the LLM and the embedding model
 # https://huggingface.co/spaces/mteb/leaderboard
 EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"

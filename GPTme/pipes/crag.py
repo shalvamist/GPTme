@@ -13,11 +13,10 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.vectorstores import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_mistralai.chat_models import ChatMistralAI
 
-from ingest.doc_loader import get_retriever
-from llm.load_model import download_model, mount_model
-from prompt_config import PROMPT
+from GPTme.ingest.doc_loader import get_retriever
+from GPTme.llms.load_model import download_model, mount_model
+from GPTme.prompt_config import PROMPT
 
 class GraphState(TypedDict):
     """

@@ -1,4 +1,4 @@
-from config import MODEL_ID, SYSTEM_PROMPT
+from GPTme.config import MODEL_ID, SYSTEM_PROMPT
 from langchain_core.prompts import PromptTemplate
 
 start_token_prompt = ""

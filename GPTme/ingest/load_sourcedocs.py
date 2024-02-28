@@ -1,6 +1,6 @@
 import logging
 import os
-from config import SOURCES_PATH, CHUNK_SIZE, OVERLAP
+from GPTme.config import SOURCES_PATH, CHUNK_SIZE, OVERLAP
 from langchain_community.document_loaders import CSVLoader, PDFMinerLoader, TextLoader, UnstructuredExcelLoader, Docx2txtLoader
 from langchain_community.document_loaders import UnstructuredFileLoader, UnstructuredMarkdownLoader
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed

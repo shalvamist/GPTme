@@ -1,6 +1,6 @@
 import bs4
 from langchain_community.document_loaders import WebBaseLoader
-from config import WEB_URLS
+from GPTme.config import WEB_URLS
 
 def load_webpage(webpage_list=WEB_URLS):
 
