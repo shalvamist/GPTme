@@ -1,7 +1,5 @@
 from typing import Annotated, Dict, TypedDict
 from langchain_core.messages import BaseMessage
-import json
-import operator
 from typing import Annotated, Sequence, TypedDict
 
 from langchain import hub
@@ -10,13 +8,10 @@ from langchain.prompts import PromptTemplate
 from langchain.schema import Document
 from langchain_community.chat_models import ChatOllama
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_community.vectorstores import Chroma
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-
 from GPTme.ingest.doc_loader import get_retriever
-from GPTme.llms.load_model import download_model, mount_model
-from GPTme.prompt_config import PROMPT
+
+local_llm = "mistral:instruct"
 
 class GraphState(TypedDict):
     """
@@ -28,9 +23,8 @@ class GraphState(TypedDict):
 
     keys: Dict[str, any]
 
-### Graph Nodes ###
-
-def retrieve(state):
+### Nodes ###
+def mmr_retrieve(state):
     """
     Retrieve documents
 
@@ -43,11 +37,26 @@ def retrieve(state):
     print("---RETRIEVE---")
     state_dict = state["keys"]
     question = state_dict["question"]
-    local = state_dict["local"]
-    retriever = get_retriever()
+    retriever = get_retriever() # GPTme retriever
     documents = retriever.get_relevant_documents(question)
-    return {"keys": {"documents": documents, "local": local, "question": question}}
+    return {"keys": {"documents": documents, "question": question, "search_type":"mmr"}}
 
+def similarity_retrieve(state):
+    """
+    Retrieve documents
+
+    Args:
+        state (dict): The current graph state
+
+    Returns:
+        state (dict): New key added to state, documents, that contains retrieved documents
+    """
+    print("---RETRIEVE---")
+    state_dict = state["keys"]
+    question = state_dict["question"]
+    retriever = get_retriever("similarity") # GPTme retriever
+    documents = retriever.get_relevant_documents(question)
+    return {"keys": {"documents": documents, "question": question, "search_type":"similarity"}}
 
 def generate(state):
     """
@@ -63,25 +72,12 @@ def generate(state):
     state_dict = state["keys"]
     question = state_dict["question"]
     documents = state_dict["documents"]
-    local = state_dict["local"]
 
     # Prompt
-    # prompt = hub.pull("rlm/rag-prompt")
-    prompt = PROMPT
+    prompt = hub.pull("rlm/rag-prompt")
 
     # LLM
-    # if local == "Yes":
-    #     llm = ChatOllama(model=local_llm, temperature=0)
-    # else:
-    #     llm = ChatMistralAI(
-    #         model="mistral-medium", temperature=0, mistral_api_key=mistral_api_key
-    #     )
-    llm_path = download_model()
-    llm = mount_model(llm_path) 
-
-    # Post-processing
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
+    llm = ChatOllama(model=local_llm, temperature=0)
 
     # Chain
     rag_chain = prompt | llm | StrOutputParser()
@@ -108,17 +104,10 @@ def grade_documents(state):
     state_dict = state["keys"]
     question = state_dict["question"]
     documents = state_dict["documents"]
-    local = state_dict["local"]
+    search_type = state_dict["search_type"]
 
     # LLM
-    # if local == "Yes":
-    #     llm = ChatOllama(model=local_llm, format="json", temperature=0)
-    # else:
-    #     llm = ChatMistralAI(
-    #         mistral_api_key=mistral_api_key, temperature=0, model="mistral-medium"
-    #     )
-    llm_path = download_model()
-    llm = mount_model(llm_path) 
+    llm = ChatOllama(model=local_llm, format="json", temperature=0)
 
     prompt = PromptTemplate(
         template="""You are a grader assessing relevance of a retrieved document to a user question. \n 
@@ -149,15 +138,18 @@ def grade_documents(state):
             filtered_docs.append(d)
         else:
             print("---GRADE: DOCUMENT NOT RELEVANT---")
-            search = "Yes"  # Perform web search
             continue
+
+    search = "No"  # Perform web search only if we have less than 3 results for context gen
+    if len(filtered_docs) < 3:
+        search = "Yes"  
 
     return {
         "keys": {
             "documents": filtered_docs,
             "question": question,
-            "local": local,
-            "run_web_search": search,
+            "similarity_search": search,
+            "search_type": search_type,
         }
     }
 
@@ -177,7 +169,6 @@ def transform_query(state):
     state_dict = state["keys"]
     question = state_dict["question"]
     documents = state_dict["documents"]
-    local = state_dict["local"]
 
     # Create a prompt template with format instructions and the query
     prompt = PromptTemplate(
@@ -193,23 +184,15 @@ def transform_query(state):
 
     # Grader
     # LLM
-    # if local == "Yes":
-    #     llm = ChatOllama(model=local_llm, temperature=0)
-    # else:
-    #     llm = ChatMistralAI(
-    #         mistral_api_key=mistral_api_key, temperature=0, model="mistral-medium"
-    #     )
-    llm_path = download_model()
-    llm = mount_model(llm_path) 
+    llm = ChatOllama(model=local_llm, temperature=0)
 
     # Prompt
     chain = prompt | llm | StrOutputParser()
     better_question = chain.invoke({"question": question})
 
     return {
-        "keys": {"documents": documents, "question": better_question, "local": local}
+        "keys": {"documents": documents, "question": better_question}
     }
-
 
 def web_search(state):
     """
@@ -226,7 +209,6 @@ def web_search(state):
     state_dict = state["keys"]
     question = state_dict["question"]
     documents = state_dict["documents"]
-    local = state_dict["local"]
 
     tool = TavilySearchResults()
     docs = tool.invoke({"query": question})
@@ -234,12 +216,27 @@ def web_search(state):
     web_results = Document(page_content=web_results)
     documents.append(web_results)
 
-    return {"keys": {"documents": documents, "local": local, "question": question}}
+    return {"keys": {"documents": documents, "question": question}}
 
+def terminate_search(state):
+    """
+    Ran both MRR & Similarity retrievers and didn't find relevant docs. updating the user
+
+    Args:
+        state (dict): The current graph state
+
+    Returns:
+        state (dict): Web results appended to documents.
+    """
+
+    print("---NO RELEVANT CONTEXT---")
+    return {
+        "keys": {
+            "generation":"After performing both MRR & Similarity RAGs I couldn't find relevant context. can you please share more details in your question ?",
+        }
+    }
 
 ### Edges
-
-
 def decide_to_generate(state):
     """
     Determines whether to generate an answer or re-generate a question for web search.
@@ -251,18 +248,77 @@ def decide_to_generate(state):
         str: Next node to call
     """
 
-    print("---DECIDE TO GENERATE---")
+    print("---DECIDE TO GENERATE / SEARCH / TERMINATE---")
     state_dict = state["keys"]
-    question = state_dict["question"]
-    filtered_documents = state_dict["documents"]
-    search = state_dict["run_web_search"]
+
+    # question = state_dict["question"]
+    # filtered_documents = state_dict["documents"]
+    search = state_dict["similarity_search"]
+    search_type = state_dict["search_type"]
+
+    # print(f"current state - {state_dict}")
 
     if search == "Yes":
         # All documents have been filtered check_relevance
         # We will re-generate a new query
-        print("---DECISION: TRANSFORM QUERY and RUN WEB SEARCH---")
-        return "transform_query"
+        if search_type == "mmr":
+            print("---DECISION: SIMILARITY SEARCH---")
+            return "similarity_retrieve"
+        else: 
+            print("---DECISION: TERMINATE SEARCH---")
+            return "terminate_search"
     else:
         # We have relevant documents, so generate answer
         print("---DECISION: GENERATE---")
         return "generate"
+    
+import pprint
+
+from langgraph.graph import END, StateGraph
+
+workflow = StateGraph(GraphState)
+
+# Define the nodes
+workflow.add_node("mmr_retrieve", mmr_retrieve)  # retrieve
+workflow.add_node("similarity_retrieve", similarity_retrieve)  # retrieve
+workflow.add_node("grade_documents", grade_documents)  # grade documents
+workflow.add_node("generate", generate)  # generatae
+# workflow.add_node("transform_query", transform_query)  # transform_query
+workflow.add_node("terminate_search", terminate_search)  # terminate_search
+# workflow.add_node("web_search", web_search)  # web search
+
+# Build graph
+workflow.set_entry_point("mmr_retrieve")
+workflow.add_edge("mmr_retrieve", "grade_documents")
+workflow.add_conditional_edges(
+    "grade_documents",
+    decide_to_generate,
+    {
+        "similarity_retrieve": "similarity_retrieve",
+        "terminate_search": "terminate_search",
+        "generate": "generate",
+    },
+)
+workflow.add_edge("similarity_retrieve", "grade_documents")
+workflow.add_edge("terminate_search", END)
+workflow.add_edge("generate", END)
+
+# Compile
+app = workflow.compile()
+
+# Run
+inputs = {
+    "keys": {
+        "question": "what is RISCV's coremark score ?",
+    }
+}
+for output in app.stream(inputs):
+    for key, value in output.items():
+        # Node
+        pprint.pprint(f"Node '{key}':")
+        # Optional: print full state at each node
+        # pprint.pprint(value["keys"], indent=2, width=80, depth=None)
+    pprint.pprint("\n---\n")
+
+# Final generation
+pprint.pprint(value["keys"]["generation"])

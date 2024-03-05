@@ -2,7 +2,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from chromadb.config import Settings
-from GPTme.config import WEB_URLS, EMBEDDING_MODEL, DB_PATH, CHUNK_SIZE, OVERLAP
+from GPTme.config import EMBEDDING_MODEL, DB_PATH, CHUNK_SIZE, OVERLAP
 
 from GPTme.ingest.load_webpage import load_webpage
 from GPTme.ingest.load_sourcedocs import load_sources
@@ -46,13 +46,21 @@ db = Chroma.from_documents(
     )
 
 # Creating the retriver 
-retriever = db.as_retriever(
-    search_type="mmr",  # Also test "similarity"
+mmr_retriever = db.as_retriever(
+    search_type="mmr",  
     search_kwargs={"k": 10},
 )
 
-def get_retriever():
-    return retriever
+similarity_retriever = db.as_retriever(
+    search_type="similarity_score_threshold", 
+    search_kwargs={"score_threshold": 0.2}
+)
+
+def get_retriever(type="mmr"):
+    if type == "mmr":
+        return mmr_retriever
+    else:
+        return similarity_retriever
 
 def get_docs():
     return docs
