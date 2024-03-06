@@ -10,8 +10,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.output_parsers import StrOutputParser
 from GPTme.ingest.doc_loader import get_retriever
-
-local_llm = "mistral:instruct"
+from GPTme.config import OLLAMA_MODEL
 
 class GraphState(TypedDict):
     """
@@ -77,7 +76,7 @@ def generate(state):
     prompt = hub.pull("rlm/rag-prompt")
 
     # LLM
-    llm = ChatOllama(model=local_llm, temperature=0)
+    llm = ChatOllama(model=OLLAMA_MODEL, temperature=0)
 
     # Chain
     rag_chain = prompt | llm | StrOutputParser()
@@ -107,7 +106,7 @@ def grade_documents(state):
     search_type = state_dict["search_type"]
 
     # LLM
-    llm = ChatOllama(model=local_llm, format="json", temperature=0)
+    llm = ChatOllama(model=OLLAMA_MODEL, format="json", temperature=0)
 
     prompt = PromptTemplate(
         template="""You are a grader assessing relevance of a retrieved document to a user question. \n 
@@ -184,7 +183,7 @@ def transform_query(state):
 
     # Grader
     # LLM
-    llm = ChatOllama(model=local_llm, temperature=0)
+    llm = ChatOllama(model=OLLAMA_MODEL, temperature=0)
 
     # Prompt
     chain = prompt | llm | StrOutputParser()
@@ -309,7 +308,7 @@ app = workflow.compile()
 # Run
 inputs = {
     "keys": {
-        "question": "what is RISCV's coremark score ?",
+        "question": "what are the most important features of RISCV ?",
     }
 }
 for output in app.stream(inputs):
