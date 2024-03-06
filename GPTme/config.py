@@ -32,6 +32,7 @@ CONTEXT_WINDOW_SIZE = 32768
 MAX_NEW_TOKENS = 2000
 N_BATCH = 1
 N_GPU_LAYERS = 100
+LLM_TEMP = 0
 
 # Doc Splitting 
 CHUNK_SIZE = 1000
@@ -52,8 +53,3 @@ WEB_URLS = ["https://lilianweng.github.io/posts/2023-06-23-agent/"
 
 # History context
 HISTORY_CONTEXT = False
-
-# Agent JSON file
-AGENTS = ""
-
-# Ollama API enable

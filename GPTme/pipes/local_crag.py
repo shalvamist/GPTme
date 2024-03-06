@@ -1,16 +1,14 @@
-from typing import Annotated, Dict, TypedDict
-from langchain_core.messages import BaseMessage
-from typing import Annotated, Sequence, TypedDict
-
+from typing import Dict, TypedDict
 from langchain import hub
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
-from langchain_community.chat_models import ChatOllama
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.output_parsers import StrOutputParser
+
 from GPTme.ingest.doc_loader import get_retriever
 from GPTme.config import OLLAMA_MODEL
+from GPTme.llms import ollama_load_model 
 
 class GraphState(TypedDict):
     """
@@ -57,6 +55,9 @@ def similarity_retrieve(state):
     documents = retriever.get_relevant_documents(question)
     return {"keys": {"documents": documents, "question": question, "search_type":"similarity"}}
 
+from langchain_community.chat_models import ChatOllama
+from GPTme.prompt_config import PROMPT
+
 def generate(state):
     """
     Generate answer
@@ -73,10 +74,12 @@ def generate(state):
     documents = state_dict["documents"]
 
     # Prompt
-    prompt = hub.pull("rlm/rag-prompt")
+    # prompt = hub.pull("rlm/rag-prompt")
+    prompt = PROMPT
 
     # LLM
-    llm = ChatOllama(model=OLLAMA_MODEL, temperature=0)
+    # llm = ChatOllama(model = OLLAMA_MODEL)
+    llm = ollama_load_model.mount_model()
 
     # Chain
     rag_chain = prompt | llm | StrOutputParser()
@@ -106,7 +109,7 @@ def grade_documents(state):
     search_type = state_dict["search_type"]
 
     # LLM
-    llm = ChatOllama(model=OLLAMA_MODEL, format="json", temperature=0)
+    llm = ollama_load_model.mount_model(format="json")
 
     prompt = PromptTemplate(
         template="""You are a grader assessing relevance of a retrieved document to a user question. \n 
@@ -183,7 +186,7 @@ def transform_query(state):
 
     # Grader
     # LLM
-    llm = ChatOllama(model=OLLAMA_MODEL, temperature=0)
+    llm = ollama_load_model.mount_model()
 
     # Prompt
     chain = prompt | llm | StrOutputParser()
@@ -282,9 +285,7 @@ workflow.add_node("mmr_retrieve", mmr_retrieve)  # retrieve
 workflow.add_node("similarity_retrieve", similarity_retrieve)  # retrieve
 workflow.add_node("grade_documents", grade_documents)  # grade documents
 workflow.add_node("generate", generate)  # generatae
-# workflow.add_node("transform_query", transform_query)  # transform_query
 workflow.add_node("terminate_search", terminate_search)  # terminate_search
-# workflow.add_node("web_search", web_search)  # web search
 
 # Build graph
 workflow.set_entry_point("mmr_retrieve")
@@ -305,19 +306,47 @@ workflow.add_edge("generate", END)
 # Compile
 app = workflow.compile()
 
-# Run
-inputs = {
-    "keys": {
-        "question": "what are the most important features of RISCV ?",
-    }
-}
-for output in app.stream(inputs):
-    for key, value in output.items():
-        # Node
-        pprint.pprint(f"Node '{key}':")
-        # Optional: print full state at each node
-        # pprint.pprint(value["keys"], indent=2, width=80, depth=None)
-    pprint.pprint("\n---\n")
+def get_crag_app():
+    """
+    Implements the langgraph for local corrective RAG (CRAG). Graph -
 
-# Final generation
-pprint.pprint(value["keys"]["generation"])
+                     terminate_search
+                         ^
+                         |
+    mmr_retrieve --> grade_documents --> generate
+                         |   ^
+                         v   |
+                     similarity_retrieve
+
+    Args:
+        inputs = {
+            "keys": {
+                "question": "what are the most important features of RISCV ?",
+            }
+        }
+
+    Returns:
+        str: the CRAG result 
+    """   
+    return app
+
+
+def run_crag_app(question = "Hello"):
+    inputs = {
+        "keys": {
+            "question": f"{question}",
+        }
+    }
+
+    for output in app.stream(inputs):
+        for key, value in output.items():
+            # Node
+            pprint.pprint(f"Node '{key}':")
+            # Optional: print full state at each node
+            # pprint.pprint(value["keys"], indent=2, width=80, depth=None)
+        pprint.pprint("\n---\n")
+
+    # Final generation
+    return value["keys"]["generation"]
+
+print(run_crag_app(question="describe RISCV architecture in detail"))
