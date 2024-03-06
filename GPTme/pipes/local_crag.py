@@ -134,6 +134,7 @@ def grade_documents(state):
                 "context": d.page_content,
             }
         )
+        print(d.page_content)
         grade = score["score"]
         if grade == "yes":
             print("---GRADE: DOCUMENT RELEVANT---")
@@ -143,7 +144,7 @@ def grade_documents(state):
             continue
 
     search = "No"  # Perform web search only if we have less than 3 results for context gen
-    if len(filtered_docs) < 3:
+    if len(filtered_docs) < 1:
         search = "Yes"  
 
     return {
@@ -349,4 +350,4 @@ def run_crag_app(question = "Hello"):
     # Final generation
     return value["keys"]["generation"]
 
-print(run_crag_app(question="describe RISCV architecture in detail"))
+# print(run_crag_app(question="where did Anna Mist work ? list all positions"))
