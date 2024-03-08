@@ -1,6 +1,6 @@
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from Blog.GPTme.GPTme.llms.hf_load_model import download_model, mount_model
+from GPTme.llms.hf_load_model import download_model, mount_model
 from GPTme.ingest.doc_loader import get_retriever, get_docs
 from GPTme.prompt_config import PROMPT
 from langchain_core.runnables import RunnableParallel

@@ -1,4 +1,4 @@
-from llm.load_model import download_model, mount_model
+from GPTme.llms.hf_load_model import download_model, mount_model
 from prompt_config import PROMPT
 from langchain.chains import LLMChain
 
