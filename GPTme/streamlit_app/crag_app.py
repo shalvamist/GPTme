@@ -26,7 +26,7 @@ if uploaded_file and question:
     with open(save_path, mode='wb') as w:
         w.write(uploaded_file.getvalue())
     if os.path.isfile(save_path):
-        st.success(f'File {uploaded_file.name} is successfully saved!')
+        print(f'File {uploaded_file.name} is successfully saved!')
 
     response = run_crag_app(question=question)
     st.write("### Answer")

@@ -9,5 +9,5 @@ find = {}  # Scan the project directory with the default parameters
 name = "GPTme"
 version = "0.0.1"
 authors = [
-  { name="Shalva Mist", email="shalvamm@gmail.com" },
+  { name="Shalva Mist"},
 ]

@@ -349,5 +349,3 @@ def run_crag_app(question = "Hello"):
 
     # Final generation
     return value["keys"]["generation"]
-
-# print(run_crag_app(question="where did Anna Mist work ? list all positions"))
