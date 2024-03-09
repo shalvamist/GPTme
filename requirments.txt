@@ -6,3 +6,5 @@ ollama
 langchain_core
 BeautifulSoup4
 sentence-transformers
+streamlit
+langgraph

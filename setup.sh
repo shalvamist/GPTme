@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## Installing reequired python packages
+pip install -r GPTme/requirments.txt
+
 ## Setting up LlamaCPP
 git clone https://github.com/ggerganov/llama.cpp
 export LLAMA_CUBLAS=on
