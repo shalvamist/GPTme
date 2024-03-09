@@ -27,7 +27,7 @@ def get_ragchain():
 
     return rag_chain_with_source
 
-result = get_ragchain().invoke("tell me about RISCV")
+result = get_ragchain().invoke("tell me about Italy")
 print(result["answer"])
 
 

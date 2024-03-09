@@ -20,11 +20,11 @@ OVERLAP = 200
 ### HUGGINGFACE MODELS
 # MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
 # MODEL_BASE_NAME = "mistral-7b-instruct-v0.1.Q6_K.gguf"
-# MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" # https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF
-# MODEL_BASE_NAME = "mistral-7b-instruct-v0.2.Q5_K_S.gguf"
+MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.2-GGUF" # https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF
+MODEL_BASE_NAME = "mistral-7b-instruct-v0.2.Q5_K_S.gguf"
 # MODEL_BASE_NAME = "mistral-7b-instruct-v0.2.Q6_K.gguf"
-MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.2-code-ft-GGUF" # https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-code-ft-GGUF
-MODEL_BASE_NAME = "mistral-7b-instruct-v0.2-code-ft.Q6_K.gguf"
+# MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.2-code-ft-GGUF" # https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-code-ft-GGUF
+# MODEL_BASE_NAME = "mistral-7b-instruct-v0.2-code-ft.Q6_K.gguf"
 # MODEL_ID = "TheBloke/Llama-2-7B-GGUF" # https://huggingface.co/TheBloke/Llama-2-7B-GGUF
 # MODEL_BASE_NAME = "llama-2-7b.Q6_K.gguf"
 

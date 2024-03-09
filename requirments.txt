@@ -1,0 +1,8 @@
+chromadb
+huggingface_hub
+langchain
+langchain_community
+ollama
+langchain_core
+BeautifulSoup4
+sentence-transformers

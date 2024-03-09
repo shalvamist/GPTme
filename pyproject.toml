@@ -1,14 +1,5 @@
 [build-system]
-requires = [
-  "setuptools",
-  "langchain_core",
-  "bs4",
-  "concurrent",
-  "chromadb",
-  "huggingface_hub",
-  "langchain",
-  "langchain_community",
-  ]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages]
