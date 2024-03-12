@@ -15,6 +15,12 @@
 4. Run 'source setup.sh'
 5. Run 'streamlit run GPTme/streamlit_app/crag_app.py'
 
+## Installation of LlamaCPP - included in the setup.sh script
+I didn't have much luck with installing the package and getting the GPU to work, using the default Linux installation instructions i.e.
+"""CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python"""
+So following the directions in this github issue () I generated the llama_cpp_setup.sh which worked every time! 
+The main drawback is that it take ~5 min to build and install
+
 ## ToDo
 1. Colab deployment of CRAG & RAG pipes
 2. Enable more web UI paltforms - right now only StreamLit is supported
