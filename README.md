@@ -20,7 +20,7 @@ I didn't have much luck with installing the package and getting the GPU to work,
 ```bash
 CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python
 ```
-So following the directions in this github [![Github]issue(https://github.com/abetlen/llama-cpp-python/issues/509)] I generated the llama_cpp_setup.sh which worked every time! 
+So following the directions in this github [issue](https://github.com/abetlen/llama-cpp-python/issues/509) I generated the llama_cpp_setup.sh which worked every time! 
 The main drawback is that it take ~5 min to build and install
 
 ## ToDo
