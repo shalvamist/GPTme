@@ -1,11 +1,14 @@
+import os
+
 #: The release version
 version = '0.1'
 __version__ = version
 
 #### Local dir setting
-MODELS_PATH = "./MODELS"
-DB_PATH = "./DB"
-SOURCES_PATH = "./SOURCE_DOCS"
+ROOT = os.path.dirname(os.path.realpath(__file__))
+MODELS_PATH = os.path.join(ROOT,"../MODELS")
+DB_PATH = os.path.join(ROOT,"../DB")
+SOURCES_PATH = os.path.join(ROOT,"../SOURCE_DOCS")
 
 #### MODELS CONFIG
 ### EMBEDDING MODELS
