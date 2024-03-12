@@ -15,16 +15,34 @@ CHROMA_SETTINGS = Settings(
     is_persistent=True,
 )
 
+DATABASE = None
+
 def init_db():
-# Splitting the documents 
+
+    global DOC_LIST
+    global DATABASE 
+
+    # Creating a folder for the DB
+    if not os.path.exists(DB_PATH):
+        os.mkdir(DB_PATH)
+
+    # Loading sources from source directory
+    all_splits, docs, db_exists = load_sources()
+    # In the case no new files were added just return the globals
+    if db_exists:
+        print("no need to re-init the DB")
+        return DATABASE, DOC_LIST
+    else:
+        DOC_LIST = docs
+
+    print(f"Building DB from sources - using embedding model {EMBEDDING_MODEL}")
+
+    # Splitting the documents 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP, add_start_index=True
     )
-
-    # Loading sources from source directory
-    all_splits, docs = load_sources()
     # Loading webpages from webpage list
-    docs.extend(load_webpage())
+    DOC_LIST.extend(load_webpage())
     # Splitting the docs
     all_splits.extend(text_splitter.split_documents(load_webpage()))
 
@@ -41,17 +59,17 @@ def init_db():
     )
 
     # Create the DB 
-    db = Chroma.from_documents(
+    DATABASE = Chroma.from_documents(
         all_splits, 
         embedding=embeddings,
         persist_directory=DB_PATH,
         client_settings=CHROMA_SETTINGS,
         )
     
-    return db, docs    
+    return DATABASE, DOC_LIST    
 
 def get_retriever(type="mmr"):
-    db, docs = init_db()
+    db, DOC_LIST = init_db()
 
     if type == "mmr":
         return db.as_retriever(
@@ -65,5 +83,4 @@ def get_retriever(type="mmr"):
         )
 
 def get_docs():
-    db, docs = init_db()
-    return docs
+    return DOC_LIST

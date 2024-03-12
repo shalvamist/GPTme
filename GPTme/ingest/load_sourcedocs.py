@@ -63,17 +63,27 @@ def load_document_batch(filepaths):
            # return data and file paths
            return (data_list, filepaths)
 
+DOC_LIST = []
 
-def load_documents(source_dir: str) -> list[Document]:
+def load_documents(source_dir: str):
     # Loads all documents from the source documents directory, including nested folders
     paths = []
+    doc_names = []
+    global DOC_LIST
+
     for root, _, files in os.walk(source_dir):
         for file_name in files:
             print('Importing: ' + file_name)
             file_extension = os.path.splitext(file_name)[1]
             source_file_path = os.path.join(root, file_name)
+            doc_names.extend(source_file_path)
             if file_extension in DOCUMENT_MAP.keys():
                 paths.append(source_file_path)
+
+    if DOC_LIST != doc_names:
+        DOC_LIST = doc_names
+    else:
+        return [], True
 
     # Have at least one worker and at most INGEST_THREADS workers
     n_workers = min(os.cpu_count(), max(len(paths), 1))
@@ -107,7 +117,7 @@ def load_documents(source_dir: str) -> list[Document]:
             except Exception as ex:
                 file_log('Exception: %s' % (ex))
 
-    return docs
+    return docs, False
 
 
 def split_documents(documents: list[Document]) -> tuple[list[Document], list[Document]]:
@@ -123,9 +133,17 @@ def split_documents(documents: list[Document]) -> tuple[list[Document], list[Doc
     return text_docs, python_docs
 
 def load_sources():
+    # Check if the docs folder exists 
+    if not os.path.exists(SOURCES_PATH):
+        os.mkdir(SOURCES_PATH)  
+
     # Load documents and split in chunks
     logging.info(f"Loading documents from {SOURCES_PATH}")
-    documents = load_documents(SOURCES_PATH)
+    documents, DB_EXISTS = load_documents(SOURCES_PATH)
+
+    if DB_EXISTS:
+        return [], [], DB_EXISTS
+
     text_documents, python_documents = split_documents(documents)
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP)
@@ -136,4 +154,4 @@ def load_sources():
     logging.info(f"Loaded {len(documents)} documents from {SOURCES_PATH}")
     logging.info(f"Split into {len(texts)} chunks of text")
 
-    return texts, documents
+    return texts, documents, DB_EXISTS

@@ -8,3 +8,5 @@ BeautifulSoup4
 sentence-transformers
 streamlit
 langgraph
+unstructured
+unstructured[pdf]

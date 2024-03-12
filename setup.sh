@@ -1,7 +1,8 @@
 #!/bin/bash
+## Creating conda env
 
 ## Installing reequired python packages
-pip install -r GPTme/requirments.txt
+pip install -r requirements.txt
 
 ## Setting up LlamaCPP
 git clone https://github.com/ggerganov/llama.cpp
@@ -22,6 +23,5 @@ sudo systemctl start ollama
 
 ## Setting up GPTme
 python3 -m pip install --upgrade build
-cd GPTme
 python -m build
 pip install --editable .

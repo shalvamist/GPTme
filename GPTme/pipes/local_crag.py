@@ -134,7 +134,7 @@ def grade_documents(state):
                 "context": d.page_content,
             }
         )
-        print(d.page_content)
+        # print(d.page_content)
         grade = score["score"]
         if grade == "yes":
             print("---GRADE: DOCUMENT RELEVANT---")
