@@ -4,6 +4,9 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from chromadb.config import Settings
 
 import os
+import shutil
+
+
 
 from GPTme.config import EMBEDDING_MODEL, DB_PATH, CHUNK_SIZE, OVERLAP
 from GPTme.ingest.load_webpage import load_webpage
@@ -15,25 +18,29 @@ CHROMA_SETTINGS = Settings(
     is_persistent=True,
 )
 
+DOCS_CONTENT = []
 DATABASE = None
 
 def init_db():
 
-    global DOC_LIST
+    global DOCS_CONTENT
     global DATABASE 
 
     # Creating a folder for the DB
     if not os.path.exists(DB_PATH):
         os.mkdir(DB_PATH)
+    else:
+        if len(DOCS_CONTENT) == 0:
+            shutil.rmtree(DB_PATH)
 
     # Loading sources from source directory
     all_splits, docs, db_exists = load_sources()
     # In the case no new files were added just return the globals
     if db_exists:
         print("no need to re-init the DB")
-        return DATABASE, DOC_LIST
+        return DATABASE, DOCS_CONTENT
     else:
-        DOC_LIST = docs
+        DOCS_CONTENT = docs
 
     print(f"Building DB from sources - using embedding model {EMBEDDING_MODEL}")
 
@@ -42,7 +49,7 @@ def init_db():
         chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP, add_start_index=True
     )
     # Loading webpages from webpage list
-    DOC_LIST.extend(load_webpage())
+    DOCS_CONTENT.extend(load_webpage())
     # Splitting the docs
     all_splits.extend(text_splitter.split_documents(load_webpage()))
 
@@ -66,10 +73,10 @@ def init_db():
         client_settings=CHROMA_SETTINGS,
         )
     
-    return DATABASE, DOC_LIST    
+    return DATABASE, DOCS_CONTENT    
 
 def get_retriever(type="mmr"):
-    db, DOC_LIST = init_db()
+    db, DOCS_CONTENT = init_db()
 
     if type == "mmr":
         return db.as_retriever(
@@ -83,4 +90,4 @@ def get_retriever(type="mmr"):
         )
 
 def get_docs():
-    return DOC_LIST
+    return DOCS_CONTENT
