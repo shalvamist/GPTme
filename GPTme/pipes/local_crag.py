@@ -6,7 +6,7 @@ from langchain.schema import Document
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.output_parsers import StrOutputParser
 
-from GPTme.ingest.doc_loader import get_retriever
+from GPTme.ingest.database import get_retriever
 from GPTme.config import OLLAMA_MODEL
 from GPTme.llms import ollama_load_model 
 

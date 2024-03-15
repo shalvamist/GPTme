@@ -1,7 +1,7 @@
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from GPTme.llms.hf_load_model import download_model, mount_model
-from GPTme.ingest.doc_loader import get_retriever, get_docs
+from GPTme.ingest.database import get_retriever, get_docs
 from GPTme.prompt_config import PROMPT
 from langchain_core.runnables import RunnableParallel
 
@@ -27,8 +27,8 @@ def get_ragchain():
 
     return rag_chain_with_source
 
-# result = get_ragchain().invoke("tell me about Italy")
-# print(result["answer"])
+result = get_ragchain().invoke("tell me about Italy")
+print(result["answer"])
 
 
 

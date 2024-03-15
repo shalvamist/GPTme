@@ -1,0 +1,10 @@
+# ignore ALL .log files
+*.log
+*.pyc
+
+# ignore ALL files in ANY directory named temp
+DB/
+MODELS/
+SOURCE_DOCS/
+llama.cpp/
+dist/

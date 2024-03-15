@@ -9,6 +9,7 @@ ROOT = os.path.dirname(os.path.realpath(__file__))
 MODELS_PATH = os.path.join(ROOT,"../MODELS")
 DB_PATH = os.path.join(ROOT,"../DB")
 SOURCES_PATH = os.path.join(ROOT,"../SOURCE_DOCS")
+DEVICE = 'cuda' # 'cpu'
 
 #### MODELS CONFIG
 ### EMBEDDING MODELS
