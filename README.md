@@ -10,7 +10,8 @@
 
 ## Install steps - Colab
 One click set up ! 
-1. Simple RAG example - checkout this [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_Colab.ipynb)   
+1. Corrective RAG example - checkout [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_CRAG_terminal_app.ipynb)   
+2. Simple RAG example - checkout [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_Colab.ipynb)   
 
 ## Install steps - Linux
 1. Pull the repo & cd to GPTme folder
