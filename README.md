@@ -7,6 +7,7 @@
 2. LLMs infrastructure modularity - Currently supporting LlamaCPP + HF & Ollama wraped with Langchain - working on the non free services intergration right now
 3. Work with the latest models HuggingFace 
 4. Utilize LangGraph to run corrective RAG on your documents - Awesome blog post & videos can be found [here](https://blog.langchain.dev/agentic-rag-with-langgraph/)
+5. Create your own vector database - Credit to [PromtEngineer](https://www.youtube.com/@engineerprompt) & his repo [localGPT](https://github.com/PromtEngineer/localGPT)
 
 ## Install steps - Colab
 One click set up ! 
