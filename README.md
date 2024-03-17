@@ -37,12 +37,12 @@ One click set up !
    python GPTme/Examples/crag_example.py
    ```
 
-## Installation of LlamaCPP - included in the setup.sh script
+## Installation of LlamaCPP - included in the llama_cpp_setup.sh script
 I didn't have much luck with installing the package and getting the GPU to work, using the default Linux installation instructions i.e.
-```bash
-CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install llama-cpp-python
-```
-So following the directions in this github [issue](https://github.com/abetlen/llama-cpp-python/issues/509) I created the llama_cpp_setup.sh which worked every time!
+If you have issues with utilizing your GPU, please try the llamaCPP setup script. 
 
-The main drawback is that it takes ~5 min to build and install - checkout the [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/Running_LlamaCPP_in_Colab_GPU.ipynb) for more experimentation 
+The install directions are described in this github [issue](https://github.com/abetlen/llama-cpp-python/issues/509) 
+This works every time, but the main drawback is that it takes ~5 min to build and install
+
+checkout the [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/Running_LlamaCPP_in_Colab_GPU.ipynb) for more experimentation 
 
