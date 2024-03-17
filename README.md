@@ -11,9 +11,9 @@
 
 ## Install steps - Colab
 One click set up ! 
-1. Corrective RAG example - checkout [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_CRAG_terminal_app.ipynb) - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_CRAG_terminal_app.ipynb)
+1. Corrective RAG example - checkout [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_CRAG_terminal_app.ipynb) - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_CRAG_terminal_app.ipynb)
 
-2. Simple RAG example - checkout [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_Colab.ipynb) - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_Colab.ipynb)   
+2. Simple RAG example - checkout [notebook](https://github.com/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_Colab.ipynb) - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/shalvamist/GPTme/blob/main/Examples/notebooks/GPTme_Colab.ipynb)   
 
 ## Install steps - Linux
 1. Pull the repo & cd to GPTme folder
