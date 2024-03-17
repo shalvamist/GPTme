@@ -2,6 +2,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from chromadb.config import Settings
+import chromadb
 import os
 import shutil
 
@@ -21,6 +22,7 @@ from langchain.docstore.document import Document
 CHROMA_SETTINGS = Settings(
     anonymized_telemetry=False,
     is_persistent=True,
+    allow_reset=True,
 )
 
 # TODO - review PDF loaders - need to find the best option
@@ -79,17 +81,26 @@ def load_document_batch(filepaths):
            # return data and file paths
            return (data_list, filepaths)
 
-def split_documents(documents: list[Document]) -> tuple[list[Document], list[Document]]:
+def split_documents(documents: list[Document]) -> list[list[Document], list[Document], list[Document]]:
     # Splits documents for correct Text Splitter
-    text_docs, python_docs = [], []
+    text_docs, python_docs, cpp_docs = [], [], []
     for doc in documents:
         if doc is not None:
            file_extension = os.path.splitext(doc.metadata["source"])[1]
-           if file_extension == ".py":
-               python_docs.append(doc)
-           else:
-               text_docs.append(doc)
-    return text_docs, python_docs
+           match file_extension:
+               case ".py":
+                   python_docs.append(doc)
+               case ".c":
+                   cpp_docs.append(doc)
+               case ".h":
+                   cpp_docs.append(doc)
+               case ".hpp":
+                   cpp_docs.append(doc)
+               case ".cpp":
+                   cpp_docs.append(doc)
+               case _:
+                   text_docs.append(doc)
+    return text_docs, python_docs, cpp_docs
 
 def load_documents(source_dir: str):
     # Loads all documents from the source documents directory, including nested folders
@@ -160,13 +171,15 @@ class RAG_DB:
         # Load documents 
         logging.info(f"Loading documents from {SOURCES_PATH}")
         DOCS_CONTENT = load_documents(SOURCES_PATH)
-        text_documents, python_documents = split_documents(DOCS_CONTENT)
+        text_documents, python_documents, cpp_code = split_documents(DOCS_CONTENT)
 
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP)
         python_splitter = RecursiveCharacterTextSplitter.from_language(language=Language.PYTHON, chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP)
+        c_splitter = RecursiveCharacterTextSplitter.from_language(language=Language.CPP, chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP)
 
         texts = text_splitter.split_documents(text_documents)
         texts.extend(python_splitter.split_documents(python_documents))
+        texts.extend(c_splitter.split_documents(cpp_code))
         logging.info(f"Loaded {len(DOCS_CONTENT)} documents from {SOURCES_PATH}")
         logging.info(f"Split into {len(texts)} chunks of text")
 
@@ -195,8 +208,7 @@ def create_db():
 
     for root, _, files in os.walk(SOURCES_PATH):
         for file_name in files:
-            source_file_path = os.path.join(root, file_name)
-            doc_names.extend(source_file_path)
+            doc_names.extend(file_name)
 
     # Checking if the list of source docs has changed 
     if db.DOC_LIST != doc_names:
@@ -204,7 +216,7 @@ def create_db():
         if len(doc_names) == 0:
             logging.info(f"No documents fonund in source dir: {SOURCES_PATH}")
             logging.info(f"Clearing out current DB folder")
-            shutil.rmtree(DB_PATH)
+            db.DATABASE.delete_collection()
             db.update_database(None)
             db.update_doc_list([])
             db.update_contects([])
@@ -266,3 +278,15 @@ def get_retriever(type="mmr"):
 def get_docs():
     db = RAG_DB()
     return db.DOCS_CONTENT
+
+def get_docs_list():
+    db = RAG_DB()
+    return db.DOC_LIST
+
+def clear_db():
+    db = RAG_DB()
+    if db.DATABASE is not None:
+        db.DATABASE.delete_collection()
+        db.update_database(None)
+        db.update_doc_list([])
+        db.update_contects([])
