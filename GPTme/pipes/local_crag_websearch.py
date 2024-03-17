@@ -3,12 +3,12 @@ from langchain import hub
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
-from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.output_parsers import StrOutputParser
 
 from GPTme.ingest.database import get_retriever
 from GPTme.config import OLLAMA_MODEL
 from GPTme.llms import ollama_load_model 
+from langchain_community.tools import DuckDuckGoSearchRun
 
 class GraphState(TypedDict):
     """
@@ -21,7 +21,7 @@ class GraphState(TypedDict):
     keys: Dict[str, any]
 
 ### Nodes ###
-def mmr_retrieve(state):
+def db_retrieve(state):
     """
     Retrieve documents
 
@@ -36,24 +36,9 @@ def mmr_retrieve(state):
     question = state_dict["question"]
     retriever = get_retriever() # GPTme retriever
     documents = retriever.get_relevant_documents(question)
-    return {"keys": {"documents": documents, "question": question, "search_type":"mmr"}}
-
-def similarity_retrieve(state):
-    """
-    Retrieve documents
-
-    Args:
-        state (dict): The current graph state
-
-    Returns:
-        state (dict): New key added to state, documents, that contains retrieved documents
-    """
-    print("---RETRIEVE---")
-    state_dict = state["keys"]
-    question = state_dict["question"]
     retriever = get_retriever("similarity") # GPTme retriever
-    documents = retriever.get_relevant_documents(question)
-    return {"keys": {"documents": documents, "question": question, "search_type":"similarity"}}
+    documents.extend(retriever.get_relevant_documents(question))
+    return {"keys": {"documents": documents, "question": question}}
 
 from langchain_community.chat_models import ChatOllama
 from GPTme.prompt_config import PROMPT
@@ -106,7 +91,6 @@ def grade_documents(state):
     state_dict = state["keys"]
     question = state_dict["question"]
     documents = state_dict["documents"]
-    search_type = state_dict["search_type"]
 
     # LLM
     llm = ollama_load_model.mount_model(format="json")
@@ -152,9 +136,73 @@ def grade_documents(state):
             "documents": filtered_docs,
             "question": question,
             "similarity_search": search,
-            "search_type": search_type,
         }
     }
+
+
+def transform_query(state):
+    """
+    Transform the query to produce a better question.
+
+    Args:
+        state (dict): The current graph state
+
+    Returns:
+        state (dict): Updates question key with a re-phrased question
+    """
+
+    print("---TRANSFORM QUERY---")
+    state_dict = state["keys"]
+    question = state_dict["question"]
+    documents = state_dict["documents"]
+
+    # Create a prompt template with format instructions and the query
+    prompt = PromptTemplate(
+        template="""You are generating questions that is well optimized for retrieval. \n 
+        Look at the input and try to reason about the underlying sematic intent / meaning. \n 
+        Here is the initial question:
+        \n ------- \n
+        {question} 
+        \n ------- \n
+        Provide an improved question without any premable, only respond with the updated question: """,
+        input_variables=["question"],
+    )
+
+    # Grader
+    # LLM
+    llm = ollama_load_model.mount_model()
+
+    # Prompt
+    chain = prompt | llm | StrOutputParser()
+    better_question = chain.invoke({"question": question})
+
+    return {
+        "keys": {"documents": documents, "question": better_question}
+    }
+
+def web_search(state):
+    """
+    Web search based on the re-phrased question using Tavily API.
+
+    Args:
+        state (dict): The current graph state
+
+    Returns:
+        state (dict): Web results appended to documents.
+    """
+
+    print("---WEB SEARCH---")
+    state_dict = state["keys"]
+    question = state_dict["question"]
+    documents = state_dict["documents"]
+
+    tool = DuckDuckGoSearchRun()
+    docs = tool.run(question)
+    # web_results = "\n".join([d["content"] for d in docs])
+    # web_results = Document(page_content=web_results)
+    documents.append(Document(docs))
+
+    return {"keys": {"documents": documents, "question": question}}
 
 def terminate_search(state):
     """
@@ -192,19 +240,12 @@ def decide_to_generate(state):
     # question = state_dict["question"]
     # filtered_documents = state_dict["documents"]
     search = state_dict["similarity_search"]
-    search_type = state_dict["search_type"]
-
-    # print(f"current state - {state_dict}")
 
     if search == "Yes":
         # All documents have been filtered check_relevance
         # We will re-generate a new query
-        if search_type == "mmr":
-            print("---DECISION: SIMILARITY SEARCH---")
-            return "similarity_retrieve"
-        else: 
-            print("---DECISION: TERMINATE SEARCH---")
-            return "terminate_search"
+        print("---DECISION: TERMINATE SEARCH---")
+        return "terminate_search"
     else:
         # We have relevant documents, so generate answer
         print("---DECISION: GENERATE---")
@@ -217,13 +258,30 @@ from langgraph.graph import END, StateGraph
 workflow = StateGraph(GraphState)
 
 # Define the nodes
-workflow.add_node("mmr_retrieve", mmr_retrieve)  # retrieve
-workflow.add_node("similarity_retrieve", similarity_retrieve)  # retrieve
+workflow.add_node("db_retrieve", db_retrieve)  # retrieve
+workflow.add_node("web_search", web_search)  # web_search
+workflow.add_node("transform_query", transform_query)  # retrieve
 workflow.add_node("grade_documents", grade_documents)  # grade documents
 workflow.add_node("generate", generate)  # generatae
 workflow.add_node("terminate_search", terminate_search)  # terminate_search
 
 # Build graph
+workflow.set_entry_point("db_retrieve")
+workflow.add_edge("db_retrieve", "transform_query")
+workflow.add_edge("transform_query", "web_search")
+workflow.add_edge("web_search", "grade_documents")
+workflow.add_conditional_edges(
+    "grade_documents",
+    decide_to_generate,
+    {
+        "terminate_search": "terminate_search",
+        "generate": "generate",
+    },
+)
+workflow.add_edge("terminate_search", END)
+workflow.add_edge("generate", END)
+
+'''
 workflow.set_entry_point("mmr_retrieve")
 workflow.add_edge("mmr_retrieve", "grade_documents")
 workflow.add_conditional_edges(
@@ -238,6 +296,7 @@ workflow.add_conditional_edges(
 workflow.add_edge("similarity_retrieve", "grade_documents")
 workflow.add_edge("terminate_search", END)
 workflow.add_edge("generate", END)
+'''
 
 # Compile
 app = workflow.compile()
@@ -246,13 +305,11 @@ def get_crag_app():
     """
     Implements the langgraph for local corrective RAG (CRAG). Graph -
 
-                     terminate_search
-                         ^
-                         |
-    mmr_retrieve --> grade_documents --> generate
-                         |   ^
-                         v   |
-                     similarity_retrieve
+    DB_retrieve (MMR, Similarity) --> Question transmute --> Websearch --> grade_documents --> generate
+                                                                                |
+                                                                                V
+                                                                             Terminate
+
 
     Args:
         inputs = {

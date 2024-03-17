@@ -10,3 +10,4 @@ streamlit
 langgraph
 unstructured
 unstructured[pdf]
+duckduckgo-search

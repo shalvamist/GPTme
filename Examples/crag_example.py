@@ -1,3 +1,4 @@
+# from GPTme.pipes.local_crag_websearch import run_crag_app
 from GPTme.pipes.local_crag import run_crag_app
 
 def CRAG_QA():
