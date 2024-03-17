@@ -24,5 +24,6 @@ sudo systemctl start ollama
 
 ## Setting up GPTme
 python3 -m pip install --upgrade build
-python -m build
+python3 -m pip install --upgrade pip
+python3 -m build
 pip install --editable .
