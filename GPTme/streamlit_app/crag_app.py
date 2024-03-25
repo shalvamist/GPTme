@@ -2,13 +2,34 @@ import streamlit as st
 
 from GPTme.pipes.local_crag import run_crag_app
 from GPTme.ingest.database import get_docs_list, create_db, clear_db
+from GPTme.whisper.whisper_load_run import download_whisper, build_whisper, decode_audio, run_whisper, init_whisper
 from GPTme.config import SOURCES_PATH, DB_PATH
 import os
-import shutil
+from audiorecorder import audiorecorder
+from GPTme.config import WHISPER_INPUT, WHISPER_OUTPUT
 
-current_file_list = get_docs_list()
-state = 'Pending DB'
-database_ready = False
+if 'init' not in st.session_state:
+    st.session_state.init = False
+
+if 'question' not in st.session_state:
+    st.session_state.question = ""
+
+if 'qNum' not in st.session_state:
+    st.session_state.qNum = 0
+
+# Store LLM generated responses
+if "messages" not in st.session_state.keys():
+    st.session_state.messages = [{"role": "assistant", "content": "How may I help you?"}]
+
+if not st.session_state.init:
+    st.session_state.init = True
+    init_whisper()
+    download_whisper(model_type='tiny')
+    build_whisper()
+
+    current_file_list = get_docs_list()
+    state = 'Pending DB'
+    database_ready = False
 
 def reset_db():
     global state
@@ -19,6 +40,9 @@ def reset_db():
     create_db()
     state = 'Ready for you questions'
     database_ready = True
+
+def generate_response(prompt_input):                    
+    return run_crag_app(question=prompt_input)
 
 with st.sidebar:
     st.title("Local Corrective RAG with your Data")
@@ -41,20 +65,45 @@ with st.sidebar:
         state = 'Ready for you questions'
         database_ready = True
     st.button("Reset Database", on_click=reset_db)
+    st.write(f'## Click here to recored your question')
+    audio = audiorecorder("Record a question", "Stop")
 
+    if len(audio) > 0:
+        # To play audio in frontend:
+        st.audio(audio.export().read())  
+        # To save audio to a file, use pydub export method:
+        # st.write(f"### question number - {st.session_state.qNum}")
+        question_audio_file = os.path.join(WHISPER_INPUT,"question_"+str(st.session_state.qNum)+".wav")
+        audio.export(question_audio_file, format="wav")
+        # To get audio properties, use pydub AudioSegment properties:
+        st.write(f"Frame rate: {audio.frame_rate}, Frame width: {audio.frame_width}, Duration: {audio.duration_seconds} seconds")
+        st.session_state.qNum += 1
+        run_whisper(decode_audio(question_audio_file))
+        base_dir_name = os.path.split(question_audio_file)
+        transcript_file = base_dir_name[1].split('.')[0] + '_converted.txt'
+        transcript_file = os.path.join(WHISPER_OUTPUT,transcript_file)
+        with open(transcript_file) as f:
+            st.session_state.question = f.read().replace('\n', '')
+        st.session_state.messages.append({"role": "user", "content": st.session_state.question})
 
-st.title("📝 files Q&A with Local CRAG")
+st.title("📝 Q&A with Local CRAG")
 
-st.write(f'### {state}')
+# Display chat messages
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-# Capturing the question
-question = st.text_input(
-    "Ask something related to your docs",
-    placeholder="Can you give me a short summary of the context?",
-    # disabled=not uploaded_file,
-)
+# User-provided prompt
+if prompt := st.chat_input():
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.write(prompt)
 
-if question and database_ready:
-    response = run_crag_app(question=question)
-    st.write("### Answer")
-    st.write(response)
+# Generate a new response if last message is not from assistant
+if st.session_state.messages[-1]["role"] != "assistant":
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response = generate_response(prompt) 
+            st.write(response) 
+    message = {"role": "assistant", "content": response}
+    st.session_state.messages.append(message)

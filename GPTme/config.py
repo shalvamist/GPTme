@@ -1,4 +1,5 @@
 import os
+import torch
 
 #: The release version
 version = '0.1'
@@ -6,10 +7,17 @@ __version__ = version
 
 #### Local dir setting
 ROOT = os.path.dirname(os.path.realpath(__file__))
-MODELS_PATH = os.path.join(ROOT,"../MODELS")
+MODELS_PATH = os.path.join(ROOT,"../llms")
+WHISPER_PATH = os.path.join(ROOT,"../whisper.cpp")
+WHISPER_INPUT = os.path.join(ROOT,"../GPTme","whisper","audio")
+WHISPER_OUTPUT = os.path.join(ROOT,"../GPTme","whisper","output")
 DB_PATH = os.path.join(ROOT,"../DB")
 SOURCES_PATH = os.path.join(ROOT,"../SOURCE_DOCS")
-DEVICE = 'cuda' # 'cpu'
+if torch.cuda.is_available():
+    DEVICE = 'cuda'
+else:
+    DEVICE = 'cpu'
+
 
 #### MODELS CONFIG
 ### EMBEDDING MODELS

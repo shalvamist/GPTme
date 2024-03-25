@@ -3,7 +3,7 @@ from GPTme.config import MODEL_ID, MODEL_BASE_NAME, MODELS_PATH, CONTEXT_WINDOW_
 from langchain_community.llms import LlamaCpp
 
 # Download the model from HuggingFace
-def download_model(model_id=MODEL_ID, model_base=MODEL_BASE_NAME):
+def download_model(model_id=MODEL_ID, model_base=MODEL_BASE_NAME, model_path=MODELS_PATH):
     print(f"Loading {model_id} from HuggingFace")
     # Download the models from Hugging face - mode documentation can be found here 
     # https://huggingface.co/docs/huggingface_hub/v0.20.3/en/package_reference/file_download#huggingface_hub.hf_hub_download
@@ -11,7 +11,7 @@ def download_model(model_id=MODEL_ID, model_base=MODEL_BASE_NAME):
             repo_id=model_id,
             filename=model_base,
             resume_download=True,
-            cache_dir=MODELS_PATH,
+            cache_dir=model_path,
             local_files_only = False
             )
     return model_path
