@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 from GPTme.llms.hf_load_model import download_model
-from GPTme.config import DEVICE, WHISPER_PATH, WHISPER_INPUT, WHISPER_OUTPUT
+from GPTme.config import DEVICE, WHISPER_PATH, WHISPER_INPUT, WHISPER_OUTPUT, ROOT, WHIPER_MODELS
 
 def git(*args):
     return subprocess.check_call(['git'] + list(args))
@@ -30,8 +30,10 @@ def download_whisper(model_type="tiny",model_base="") -> str:
             else:
                 if model_base != whisper_map[model_type]:
                     print("Error - the provided parmeters for Whisper model don't match please use either model_type or model_base")
+        else:
+            print("Error - the provided parmeters for Whisper model type isn't mapped use model_base")
         # Files can be found here - https://huggingface.co/ggerganov/whisper.cpp/tree/main
-        model_path = download_model(model_id="ggerganov/whisper.cpp", model_base=model_base, model_path="./whisper_models")
+        model_path = download_model(model_id="ggerganov/whisper.cpp", model_base=model_base, model_path=WHIPER_MODELS)
     except:
         print(f"Error - Couldn't load the specified model - {model_base}")
     finally:
@@ -52,6 +54,7 @@ def build_whisper(device=DEVICE):
     # This function downloads the WhisperCPP repo and builds it according to the supported device ('cpu' vs. 'cuda')
     try:
         if not os.path.isdir(WHISPER_PATH):
+            os.chdir(os.path.join(ROOT,"../"))
             git("clone", "https://github.com/ggerganov/whisper.cpp.git")
     except:
         print("Error couldn't clone Whiper Repo - check internet connection")
@@ -94,11 +97,11 @@ def decode_audio(in_filename, **input_kwargs):
     
     return new_file_path
 
-def run_whisper(input_file):
+def run_whisper(model_path,input_file):
     try:
         base_dir_name = os.path.split(input_file)
         transcript_file = base_dir_name[1].split('.')[0]
-        cmd = ["./main", "-f", os.path.join(WHISPER_INPUT,base_dir_name[1]), "-otxt", "-of", os.path.join(WHISPER_OUTPUT,transcript_file)]
+        cmd = ["./main", "-m", model_path, "-f", os.path.join(WHISPER_INPUT,base_dir_name[1]), "-otxt", "-of", os.path.join(WHISPER_OUTPUT,transcript_file)]
 
         ### DEBUG prints ###
         # print(f"input file - {input_file}")
@@ -107,9 +110,9 @@ def run_whisper(input_file):
         # print(f"Whisper path {WHISPER_PATH}")
         # print(f"Whisper input {WHISPER_INPUT}")
         # print(f"Whisper output {WHISPER_OUTPUT}")
-        # print(f"Sending to whisper - {os.path.join(WHISPER_INPUT,base_dir_name[1])}")
-        # print(f"Getting from whisper - {os.path.join(WHISPER_OUTPUT,transcript_file)}")
-        # print(f"Whisper command - {cmd}")
+        print(f"Sending to whisper - {os.path.join(WHISPER_INPUT,base_dir_name[1])}")
+        print(f"Getting from whisper - {os.path.join(WHISPER_OUTPUT,transcript_file)}")
+        print(f"Whisper command - {cmd}")
 
         os.chdir(WHISPER_PATH)
         subprocess.run(cmd)#,shell=True, check=True,capture_output = True, text = True)

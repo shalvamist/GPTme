@@ -7,7 +7,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from GPTme.ingest.database import get_retriever
 from GPTme.config import OLLAMA_MODEL
-from GPTme.llms import ollama_load_model 
+from GPTme.llms import ollama_load_model, hf_load_model
 from langchain_community.tools import DuckDuckGoSearchRun
 
 class GraphState(TypedDict):
@@ -64,8 +64,9 @@ def generate(state):
 
     # LLM
     # llm = ChatOllama(model = OLLAMA_MODEL)
+    # llm = hf_load_model.mount_model(hf_load_model.download_model())
     llm = ollama_load_model.mount_model()
-
+    
     # Chain
     rag_chain = prompt | llm | StrOutputParser()
 

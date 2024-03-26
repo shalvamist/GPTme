@@ -9,5 +9,5 @@ sentence-transformers
 streamlit
 langgraph
 unstructured
-unstructured[pdf]
 duckduckgo-search
+unstructured[pdf]

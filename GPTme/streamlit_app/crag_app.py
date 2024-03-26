@@ -1,6 +1,6 @@
 import streamlit as st
-
-from GPTme.pipes.local_crag import run_crag_app
+# from GPTme.pipes.local_crag import run_crag_app
+from GPTme.pipes.local_crag_websearch import run_crag_app
 from GPTme.ingest.database import get_docs_list, create_db, clear_db
 from GPTme.whisper.whisper_load_run import download_whisper, build_whisper, decode_audio, run_whisper, init_whisper
 from GPTme.config import SOURCES_PATH, DB_PATH
@@ -11,35 +11,40 @@ from GPTme.config import WHISPER_INPUT, WHISPER_OUTPUT
 if 'init' not in st.session_state:
     st.session_state.init = False
 
-if 'question' not in st.session_state:
-    st.session_state.question = ""
-
-if 'qNum' not in st.session_state:
-    st.session_state.qNum = 0
-
-# Store LLM generated responses
-if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "How may I help you?"}]
-
 if not st.session_state.init:
     st.session_state.init = True
     init_whisper()
-    download_whisper(model_type='tiny')
+    st.session_state.whisper_path = download_whisper(model_type='base')
     build_whisper()
 
     current_file_list = get_docs_list()
     state = 'Pending DB'
     database_ready = False
 
+    if 'question' not in st.session_state:
+        st.session_state.question = ""
+
+    if 'qNum' not in st.session_state:
+        st.session_state.qNum = 0
+
+    # Store LLM generated responses
+    if "messages" not in st.session_state.keys():
+        st.session_state.messages = [{"role": "assistant", "content": "How may I help you?"}]
+
+
 def reset_db():
     global state
     global database_ready
     database_ready = False
     clear_db()
-    state = 'Rebuilding DB - Please hold'
-    create_db()
-    state = 'Ready for you questions'
+    with st.spinner("# Rebuilding DB - Please hold"):
+        create_db()
     database_ready = True
+
+def clear_chat():
+    init_whisper()
+    st.session_state.question = ""
+    st.session_state.messages.clear()
 
 def generate_response(prompt_input):                    
     return run_crag_app(question=prompt_input)
@@ -60,13 +65,17 @@ with st.sidebar:
             if os.path.isfile(save_path):
                 print(f'File {uploaded_file.name} is successfully saved!')
         database_ready = False
-        state = 'Rebuilding DB - Please hold'
-        create_db()
-        state = 'Ready for you questions'
+        with st.spinner("# Rebuilding DB - Please hold"):
+            create_db()
         database_ready = True
-    st.button("Reset Database", on_click=reset_db)
+    col1, col2 = st.columns(2)
     st.write(f'## Click here to recored your question')
     audio = audiorecorder("Record a question", "Stop")
+    with col1:
+        st.button("Reset Database", on_click=reset_db)
+    with col2:
+        st.button("Clear chat history", on_click=clear_chat)
+
 
     if len(audio) > 0:
         # To play audio in frontend:
@@ -76,9 +85,9 @@ with st.sidebar:
         question_audio_file = os.path.join(WHISPER_INPUT,"question_"+str(st.session_state.qNum)+".wav")
         audio.export(question_audio_file, format="wav")
         # To get audio properties, use pydub AudioSegment properties:
-        st.write(f"Frame rate: {audio.frame_rate}, Frame width: {audio.frame_width}, Duration: {audio.duration_seconds} seconds")
+        # st.write(f"Frame rate: {audio.frame_rate}, Frame width: {audio.frame_width}, Duration: {audio.duration_seconds} seconds")
         st.session_state.qNum += 1
-        run_whisper(decode_audio(question_audio_file))
+        run_whisper(st.session_state.whisper_path ,decode_audio(question_audio_file))
         base_dir_name = os.path.split(question_audio_file)
         transcript_file = base_dir_name[1].split('.')[0] + '_converted.txt'
         transcript_file = os.path.join(WHISPER_OUTPUT,transcript_file)
@@ -101,9 +110,15 @@ if prompt := st.chat_input():
 
 # Generate a new response if last message is not from assistant
 if st.session_state.messages[-1]["role"] != "assistant":
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = generate_response(prompt) 
-            st.write(response) 
-    message = {"role": "assistant", "content": response}
-    st.session_state.messages.append(message)
+    if len(os.listdir(SOURCES_PATH)) == 0:
+        with st.chat_message("assistant"):
+             st.write("There are no files in the database please add some so we could have a conversation")
+        message = {"role": "assistant", "content": "There are no files in the database please add some so we could have a conversation"}
+        st.session_state.messages.append(message)
+    else:
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = generate_response(prompt) 
+                st.write(response) 
+        message = {"role": "assistant", "content": response}
+        st.session_state.messages.append(message)

@@ -7,7 +7,8 @@ __version__ = version
 
 #### Local dir setting
 ROOT = os.path.dirname(os.path.realpath(__file__))
-MODELS_PATH = os.path.join(ROOT,"../llms")
+MODELS_PATH = os.path.join(ROOT,"../LLMS")
+WHIPER_MODELS = os.path.join(ROOT,"../whisper_models") 
 WHISPER_PATH = os.path.join(ROOT,"../whisper.cpp")
 WHISPER_INPUT = os.path.join(ROOT,"../GPTme","whisper","audio")
 WHISPER_OUTPUT = os.path.join(ROOT,"../GPTme","whisper","output")
