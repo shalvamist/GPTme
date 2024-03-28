@@ -76,7 +76,6 @@ with st.sidebar:
     with col2:
         st.button("Clear chat history", on_click=clear_chat)
 
-
     if len(audio) > 0:
         # To play audio in frontend:
         st.audio(audio.export().read())  
@@ -118,7 +117,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
     else:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                response = generate_response(prompt) 
+                response = generate_response(st.session_state.messages[-1]["content"]) 
                 st.write(response) 
         message = {"role": "assistant", "content": response}
         st.session_state.messages.append(message)

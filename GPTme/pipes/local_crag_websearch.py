@@ -8,7 +8,10 @@ from langchain_core.output_parsers import StrOutputParser
 from GPTme.ingest.database import get_retriever
 from GPTme.config import OLLAMA_MODEL
 from GPTme.llms import ollama_load_model, hf_load_model
-from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_community.tools import DuckDuckGoSearchResults
+from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from langchain.tools import WikipediaQueryRun
+from langchain_community.utilities import WikipediaAPIWrapper
 
 class GraphState(TypedDict):
     """
@@ -100,8 +103,8 @@ def grade_documents(state):
         template="""You are a grader assessing relevance of a retrieved document to a user question. \n 
         Here is the retrieved document: \n\n {context} \n\n
         Here is the user question: {question} \n
-        If the document contains keywords related to the user question, grade it as relevant. \n
-        It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
+        If the document contains keywords & related information to the user question, grade it as relevant. \n
+        It does not need to be a stringent test. The goal is to filter out unrelevant info from our context. \n
         Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question. \n
         Provide the binary score as a JSON with a single key 'score' and no premable or explaination.""",
         input_variables=["question", "context"],
@@ -136,7 +139,6 @@ def grade_documents(state):
         "keys": {
             "documents": filtered_docs,
             "question": question,
-            "similarity_search": search,
         }
     }
 
@@ -176,7 +178,6 @@ def transform_query(state):
     # Prompt
     chain = prompt | llm | StrOutputParser()
     better_question = chain.invoke({"question": question})
-
     return {
         "keys": {"documents": documents, "question": better_question}
     }
@@ -197,10 +198,34 @@ def web_search(state):
     question = state_dict["question"]
     documents = state_dict["documents"]
 
-    tool = DuckDuckGoSearchRun()
-    docs = tool.run(question)
-    # web_results = "\n".join([d["content"] for d in docs])
-    # web_results = Document(page_content=web_results)
+    wrapper = DuckDuckGoSearchAPIWrapper(time="d", max_results=3)
+    text = DuckDuckGoSearchResults(api_wrapper=wrapper, source="text")
+    docs = text.run(question)
+    documents.append(Document(docs))
+    news = DuckDuckGoSearchResults(api_wrapper=wrapper, source="new")
+    docs = news.run(question)
+    documents.append(Document(docs))
+
+    return {"keys": {"documents": documents, "question": question}}
+
+def wiki_search(state):
+    """
+    Web search based on the re-phrased question using Tavily API.
+
+    Args:
+        state (dict): The current graph state
+
+    Returns:
+        state (dict): Web results appended to documents.
+    """
+
+    print("---WIKI SEARCH---")
+    state_dict = state["keys"]
+    question = state_dict["question"]
+    documents = state_dict["documents"]
+
+    wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
+    docs = wikipedia.run(question)
     documents.append(Document(docs))
 
     return {"keys": {"documents": documents, "question": question}}
@@ -219,7 +244,7 @@ def terminate_search(state):
     print("---NO RELEVANT CONTEXT---")
     return {
         "keys": {
-            "generation":"After performing both MRR & Similarity RAGs I couldn't find relevant context. can you please share more details in your question ?",
+            "generation":"After performing both MRR & Similarity RAGs I couldn't find relevant context. I checked online but could'nt find the answer.\nCan you please share more details in your question ?",
         }
     }
 
@@ -239,10 +264,10 @@ def decide_to_generate(state):
     state_dict = state["keys"]
 
     # question = state_dict["question"]
-    # filtered_documents = state_dict["documents"]
-    search = state_dict["similarity_search"]
+    filtered_documents = state_dict["documents"]
+    # search = state_dict["similarity_search"]
 
-    if search == "Yes":
+    if len(filtered_documents) == 0:
         # All documents have been filtered check_relevance
         # We will re-generate a new query
         print("---DECISION: TERMINATE SEARCH---")
@@ -261,6 +286,7 @@ workflow = StateGraph(GraphState)
 # Define the nodes
 workflow.add_node("db_retrieve", db_retrieve)  # retrieve
 workflow.add_node("web_search", web_search)  # web_search
+workflow.add_node("wiki_search", wiki_search)  # web_search
 workflow.add_node("transform_query", transform_query)  # retrieve
 workflow.add_node("grade_documents", grade_documents)  # grade documents
 workflow.add_node("generate", generate)  # generatae
@@ -270,7 +296,8 @@ workflow.add_node("terminate_search", terminate_search)  # terminate_search
 workflow.set_entry_point("db_retrieve")
 workflow.add_edge("db_retrieve", "transform_query")
 workflow.add_edge("transform_query", "web_search")
-workflow.add_edge("web_search", "grade_documents")
+workflow.add_edge("web_search","wiki_search")
+workflow.add_edge("wiki_search", "grade_documents")
 workflow.add_conditional_edges(
     "grade_documents",
     decide_to_generate,
@@ -306,10 +333,10 @@ def get_crag_app():
     """
     Implements the langgraph for local corrective RAG (CRAG). Graph -
 
-    DB_retrieve (MMR, Similarity) --> Question transmute --> Websearch --> grade_documents --> generate
-                                                                                |
-                                                                                V
-                                                                             Terminate
+    DB_retrieve (MMR, Similarity) --> Question transmute --> Websearch --> WiKiSearch --> grade_documents --> generate
+                                                                                                |
+                                                                                                V
+                                                                                            Terminate
 
 
     Args:

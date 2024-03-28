@@ -54,11 +54,12 @@ LLM_TEMP = 0
 
 ### Prompt config
 SYSTEM_PROMPT = """
-Use the following pieces of context to answer the question at the end.
+Use the following pieces of context to answer the user question. 
 If you don't know the answer, just say that you don't know, don't try to make up an answer.
-Make sure to include refernces to provided context to back up your answer, for example page numbers, section names etc.
-Use three sentences maximum and keep the answer as concise as possible.
-You will be have to pay 10000$ if you answer out of context but if you keep your answers in cotext and helpful you will be tipped 100000$.
+Use five sentences maximum and keep the answer as focused as possible on the user question.
+In the end of the answer give a short lit of references to the relevant docs in the context.
+
+You will be have to pay 10000$ if you answer out of context BUT if you keep your answers in cotext and helpful you will be tipped 100000$.
 """
 
 # Doc sources

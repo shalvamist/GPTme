@@ -15,8 +15,11 @@ if "llama" in MODEL_ID:
 
 template = start_token_prompt + """
 System: """ + system_prompt + """
-Context: {context}
-Question: {question}
+
+Contextfor answering the question: {context}
+
+User Question: {question}
+
 Helpful Answer: Let's work this out in a step by step way to be sure we have the right answer.""" + end_token_prompt
 
 if ("mistral" in MODEL_ID) and ("-code-" in MODEL_ID):

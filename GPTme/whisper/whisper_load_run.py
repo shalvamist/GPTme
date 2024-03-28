@@ -101,7 +101,7 @@ def run_whisper(model_path,input_file):
     try:
         base_dir_name = os.path.split(input_file)
         transcript_file = base_dir_name[1].split('.')[0]
-        cmd = ["./main", "-m", model_path, "-f", os.path.join(WHISPER_INPUT,base_dir_name[1]), "-otxt", "-of", os.path.join(WHISPER_OUTPUT,transcript_file)]
+        cmd = ["./main", "-m", model_path, "-f", os.path.join(WHISPER_INPUT,base_dir_name[1]), "-otxt", "-tr", "-of", os.path.join(WHISPER_OUTPUT,transcript_file)]
 
         ### DEBUG prints ###
         # print(f"input file - {input_file}")
@@ -110,9 +110,9 @@ def run_whisper(model_path,input_file):
         # print(f"Whisper path {WHISPER_PATH}")
         # print(f"Whisper input {WHISPER_INPUT}")
         # print(f"Whisper output {WHISPER_OUTPUT}")
-        print(f"Sending to whisper - {os.path.join(WHISPER_INPUT,base_dir_name[1])}")
-        print(f"Getting from whisper - {os.path.join(WHISPER_OUTPUT,transcript_file)}")
-        print(f"Whisper command - {cmd}")
+        # print(f"Sending to whisper - {os.path.join(WHISPER_INPUT,base_dir_name[1])}")
+        # print(f"Getting from whisper - {os.path.join(WHISPER_OUTPUT,transcript_file)}")
+        # print(f"Whisper command - {cmd}")
 
         os.chdir(WHISPER_PATH)
         subprocess.run(cmd)#,shell=True, check=True,capture_output = True, text = True)
