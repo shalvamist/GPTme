@@ -20,6 +20,7 @@ pip install huggingface_hub
 
 ## Setting up Ollama
 curl -fsSL https://ollama.com/install.sh | sh
+sudo systemctl stop ollama
 sudo systemctl start ollama
 
 ## Setting up GPTme

@@ -66,7 +66,7 @@ def build_whisper(device=DEVICE):
         if device == 'cuda':
             subprocess.Popen("WHISPER_CUBLAS=1 make -j", shell=True, stdout=subprocess.PIPE)
         else:
-            subprocess.Popen("make -j")
+            subprocess.Popen("make -j", shell=True, stdout=subprocess.PIPE)
     except:
         print("Error while building Whisper")    
         sys.exit(1)  

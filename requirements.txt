@@ -11,4 +11,5 @@ langgraph
 unstructured
 duckduckgo-search
 wikipedia
+streamlit-audiorecorder
 unstructured[pdf]

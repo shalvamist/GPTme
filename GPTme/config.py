@@ -43,7 +43,8 @@ MODEL_BASE_NAME = "mistral-7b-instruct-v0.2.Q5_K_S.gguf"
 
 ### OLLAMA Models
 # OLLAMA_MODEL = "llama2"
-OLLAMA_MODEL = "mistral:instruct"
+# OLLAMA_MODEL = "mistral:instruct"
+OLLAMA_MODEL = "mistral7B_cpp_Q5"
 
 # LLM configuration
 CONTEXT_WINDOW_SIZE = 32768
