@@ -309,23 +309,6 @@ workflow.add_conditional_edges(
 workflow.add_edge("terminate_search", END)
 workflow.add_edge("generate", END)
 
-'''
-workflow.set_entry_point("mmr_retrieve")
-workflow.add_edge("mmr_retrieve", "grade_documents")
-workflow.add_conditional_edges(
-    "grade_documents",
-    decide_to_generate,
-    {
-        "similarity_retrieve": "similarity_retrieve",
-        "terminate_search": "terminate_search",
-        "generate": "generate",
-    },
-)
-workflow.add_edge("similarity_retrieve", "grade_documents")
-workflow.add_edge("terminate_search", END)
-workflow.add_edge("generate", END)
-'''
-
 # Compile
 app = workflow.compile()
 

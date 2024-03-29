@@ -45,6 +45,8 @@ def clear_chat():
     init_whisper()
     st.session_state.question = ""
     st.session_state.messages.clear()
+    st.session_state.messages = [{"role": "assistant", "content": "How may I help you?"}]
+    return
 
 def generate_response(prompt_input):                    
     return run_crag_app(question=prompt_input)
