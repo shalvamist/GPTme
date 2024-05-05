@@ -5,5 +5,12 @@
 # ignore ALL files in ANY directory named temp
 DB/
 MODELS/
+SOURCE_DOCS/
+GPTme/whisper/output/
+whisper_models/
+whisper.cpp/
+GPTme/ingest/__pycache__/
+GPTme/llms/__pycache__/
+GPTme/whisper/audio/
 llama.cpp/
 dist/
