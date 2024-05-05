@@ -28,7 +28,7 @@ EMBEDDING_MODEL = "BAAI/bge-base-en-v1.5"
 
 # Doc Splitting 
 CHUNK_SIZE = 1000
-OVERLAP = 200
+OVERLAP = 200 
 
 ### HUGGINGFACE MODELS
 # MODEL_ID = "TheBloke/Mistral-7B-Instruct-v0.1-GGUF"
@@ -43,8 +43,9 @@ MODEL_BASE_NAME = "mistral-7b-instruct-v0.2.Q5_K_S.gguf"
 
 ### OLLAMA Models
 # OLLAMA_MODEL = "llama2"
-# OLLAMA_MODEL = "mistral:instruct"
-OLLAMA_MODEL = "mistral7B_cpp_Q5"
+OLLAMA_MODEL = "mistral:instruct"
+# OLLAMA_MODEL = "mistral7B_cpp_Q5"
+# OLLAMA_MODEL = "wizardlm2"
 
 # LLM configuration
 CONTEXT_WINDOW_SIZE = 32768

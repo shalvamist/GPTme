@@ -47,24 +47,36 @@ def file_log(logentry):
    print(logentry + "\n")
 
 def load_single_document(file_path: str) -> Document:
-    # Loads a single document from a file path
+    """
+    Loads a single document from a file path.
+
+    Args:
+        file_path (str): The path to the file containing the document.
+
+    Returns:
+        Document: The loaded document.
+
+    Raises:
+        ValueError: If the file extension is not recognized.
+    """
+    file_extension = os.path.splitext(file_path)[1]
+    loader_class = DOCUMENT_MAP.get(file_extension)
+
+    if loader_class is None:
+        raise ValueError(f"Unsupported file type: {file_extension}")
+
     try:
-       file_extension = os.path.splitext(file_path)[1]
-       loader_class = DOCUMENT_MAP.get(file_extension)
-       if loader_class:
-           if file_extension == 'pdf':
-              file_log(file_path + ' loaded.')
-              loader = loader_class(file_path, mode="elements")
-           else:
-              file_log(file_path + ' loaded.')
-              loader = loader_class(file_path)
-       else:
-           file_log(file_path + ' document type is undefined.')
-           raise ValueError("Document type is undefined")
-       return loader.load()[0]
+        if file_extension == 'pdf':
+            file_log(file_path + ' loaded.')
+            loader = loader_class(file_path, mode="elements")
+        else:
+            file_log(file_path + ' loaded.')
+            loader = loader_class(file_path)
+
+        return loader.load()[0]
     except Exception as ex:
-       file_log('%s loading error: \n%s' % (file_path, ex))
-       return None
+        file_log(f'{file_path} loading error: \n{ex}')
+        return None
 
 def load_document_batch(filepaths):
     logging.info("Loading document batch")
@@ -82,24 +94,38 @@ def load_document_batch(filepaths):
            return (data_list, filepaths)
 
 def split_documents(documents: list[Document]) -> list[list[Document], list[Document], list[Document]]:
-    # Splits documents for correct Text Splitter
+    """
+    Splits documents for correct Text Splitter.
+
+    Args:
+        documents (list[Document]): The list of documents to be split.
+
+    Returns:
+        list[list[Document], list[Document], list[Document]]: A list containing three lists of documents:
+            - text_docs: Documents with text file extensions.
+            - python_docs: Documents with Python file extensions.
+            - cpp_docs: Documents with C++ file extensions.
+
+    Raises:
+        ValueError: If a document has an unsupported file extension.
+    """
     text_docs, python_docs, cpp_docs = [], [], []
     for doc in documents:
         if doc is not None:
-           file_extension = os.path.splitext(doc.metadata["source"])[1]
-           match file_extension:
-               case ".py":
-                   python_docs.append(doc)
-               case ".c":
-                   cpp_docs.append(doc)
-               case ".h":
-                   cpp_docs.append(doc)
-               case ".hpp":
-                   cpp_docs.append(doc)
-               case ".cpp":
-                   cpp_docs.append(doc)
-               case _:
-                   text_docs.append(doc)
+            file_extension = os.path.splitext(doc.metadata["source"])[1]
+            match file_extension:
+                case ".py":
+                    python_docs.append(doc)
+                case ".c":
+                    cpp_docs.append(doc)
+                case ".h":
+                    cpp_docs.append(doc)
+                case ".hpp":
+                    cpp_docs.append(doc)
+                case ".cpp":
+                    cpp_docs.append(doc)
+                case _:
+                    text_docs.append(doc)
     return text_docs, python_docs, cpp_docs
 
 def load_documents(source_dir: str):
@@ -276,6 +302,12 @@ def get_retriever(type="mmr"):
         )
 
 def get_docs():
+    """
+    Retrieves the content of all documents in the database.
+
+    Returns:
+    list: A list containing the content of all documents in the database.
+    """
     db = RAG_DB()
     return db.DOCS_CONTENT
 
